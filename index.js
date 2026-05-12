@@ -61,12 +61,7 @@ function getControlPanel() {
     new ButtonBuilder()
       .setCustomId('ai')
       .setLabel('🤖 AI Test')
-      .setStyle(ButtonStyle.Secondary),
-
-    new ButtonBuilder()
-      .setCustomId('shutdown')
-      .setLabel('🛑 Shutdown')
-      .setStyle(ButtonStyle.Danger)
+      .setStyle(ButtonStyle.Secondary)
   )
 }
 
