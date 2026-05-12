@@ -78,6 +78,7 @@ client.once('ready', async () => {
 
   // 🔥 AUTO STATUS ROTATION
   const statuses = [
+    "THE OWNER OF ZYR BOT 👑",
     "AI Assistant 🤖",
     "Monitoring system 📊",
     "Helping users 💬",
