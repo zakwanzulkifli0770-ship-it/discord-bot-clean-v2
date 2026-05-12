@@ -81,7 +81,7 @@ client.once('ready', async () => {
     "THE OWNER OF ZYR BOT 👑",
     "AI Assistant 🤖",
     "Monitoring system 📊",
-    "Running dashboard ⚡"
+    "Grinding Discord bots 💻"
   ]
 
   let i = 0
