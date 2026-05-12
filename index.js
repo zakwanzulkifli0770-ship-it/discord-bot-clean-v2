@@ -81,7 +81,6 @@ client.once('ready', async () => {
     "THE OWNER OF ZYR BOT 👑",
     "AI Assistant 🤖",
     "Monitoring system 📊",
-    "Helping users 💬",
     "Running dashboard ⚡"
   ]
 
@@ -89,7 +88,7 @@ client.once('ready', async () => {
 
   setInterval(() => {
     client.user.setPresence({
-      activities: [{ name: statuses[i], type: 0 }],
+      activities: [{ name: statuses[i], type: "WATCHING" }],
       status: "online"
     })
 
