@@ -15,7 +15,7 @@ let dashboardMessage
 client.once('ready', async () => {
   console.log(`Bot online sebagai ${client.user.tag}`)
 
-  const channel = await client.channels.fetch("910854900940955650")
+  const channel = await client.channels.fetch("884579927557558303")
     .catch(err => console.log("Channel error:", err))
 
   if (!channel) return console.log("Channel tak jumpa")
