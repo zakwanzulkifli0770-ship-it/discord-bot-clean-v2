@@ -22,15 +22,6 @@ const client = new Client({
 // =======================
 const OWNER_ID = "857317617148231690"
 
-const ADMIN_IDS = [
-  "ADMIN_ID_1",
-  "ADMIN_ID_2"
-]
-
-const MOD_IDS = [
-  "MOD_ID_1"
-]
-
 function getUserRole(userId) {
   if (userId === OWNER_ID) return "owner"
   if (ADMIN_IDS.includes(userId)) return "admin"
