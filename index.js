@@ -189,36 +189,56 @@ client.on('interactionCreate', async (interaction) => {
 // =======================
 // AI COMMAND
 // =======================
-client.on('messageCreate', async (message) => {
-  if (message.author.bot) return
-  if (!message.content.startsWith("!ai")) return
+client.on("messageCreate", async (message) => {
+  if (message.author.bot) return;
+  if (!message.content.startsWith("!ai")) return;
 
-  const prompt = message.content.slice(4).trim()
+  const prompt = message.content.slice(3).trim();
 
-  message.channel.send("🧠 Thinking...")
+  if (!prompt) {
+    return message.reply("Sila tulis soalan selepas `!ai`.");
+  }
+
+  const thinkingMsg = await message.channel.send("🧠 Thinking...");
 
   try {
     const res = await axios.post(
       "https://api.openai.com/v1/chat/completions",
       {
         model: "gpt-4o-mini",
-        messages: [{ role: "user", content: prompt }]
+        messages: [
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
       },
       {
         headers: {
-          "Authorization": `Bearer ${process.env.OPENAI_KEY}`,
-          "Content-Type": "application/json"
-        }
+          Authorization: `Bearer ${process.env.OPENAI_KEY}`,
+          "Content-Type": "application/json",
+        },
       }
-    )
+    );
 
-    message.channel.send(res.data.choices[0].message.content)
+    const reply = res.data.choices?.[0]?.message?.content;
 
+    if (!reply) {
+      return thinkingMsg.edit("❌ AI tidak beri jawapan.");
+    }
+
+    // Discord limit: 2000 characters
+    if (reply.length > 2000) {
+      await thinkingMsg.edit(reply.slice(0, 1990) + "...");
+    } else {
+      await thinkingMsg.edit(reply);
+    }
   } catch (err) {
-    console.log(err)
-    message.channel.send("❌ AI error")
+    console.error(err.response?.data || err.message);
+    await thinkingMsg.edit("❌ AI error");
   }
-})
+});
+
 
 // =======================
 // LOGIN
