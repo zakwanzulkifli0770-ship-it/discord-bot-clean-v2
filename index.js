@@ -9,6 +9,19 @@ const {
 
 const axios = require('axios')
 
+function parseIds(value) {
+  return (value || '')
+    .split(',')
+    .map(id => id.trim())
+    .filter(Boolean)
+}
+
+const TOKEN = process.env.TOKEN
+const OWNER_ID = process.env.OWNER_ID || "857317617148231690"
+const ADMIN_IDS = parseIds(process.env.ADMIN_IDS)
+const MOD_IDS = parseIds(process.env.MOD_IDS)
+const DASHBOARD_CHANNEL_ID = process.env.DASHBOARD_CHANNEL_ID || "884579927557558303"
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -16,11 +29,6 @@ const client = new Client({
     GatewayIntentBits.MessageContent
   ]
 })
-
-// =======================
-// MULTI-ADMIN SYSTEM
-// =======================
-const OWNER_ID = "857317617148231690"
 
 function getUserRole(userId) {
   if (userId === OWNER_ID) return "owner"
@@ -33,6 +41,8 @@ function getUserRole(userId) {
 // VARIABLES
 // =======================
 let dashboardMessage
+let statusInterval
+let dashboardInterval
 
 // =======================
 // BUTTON PANEL
@@ -59,7 +69,7 @@ function getControlPanel() {
 // =======================
 // READY EVENT
 // =======================
-client.once('ready', async () => {
+client.on('clientReady', async () => {
   console.log(`Bot online sebagai ${client.user.tag}`)
 
   // 🔥 AUTO STATUS ROTATION
@@ -70,32 +80,52 @@ client.once('ready', async () => {
     "Grinding Discord bots 💻"
   ]
 
-  let i = 0
+  let statusIndex = 0
 
-  setInterval(() => {
+  clearInterval(statusInterval)
+  clearInterval(dashboardInterval)
+
+  const updatePresence = () => {
     client.user.setPresence({
-      activities: [{ name: statuses[i], type: 3 }],
+      activities: [{ name: statuses[statusIndex], type: 3 }],
       status: "online"
     })
 
-    i = (i + 1) % statuses.length
-  }, 10000)
+    statusIndex = (statusIndex + 1) % statuses.length
+  }
+
+  updatePresence()
+  statusInterval = setInterval(updatePresence, 10000)
 
   // =======================
   // DASHBOARD
   // =======================
-  const channel = await client.channels.fetch("884579927557558303")
-    .catch(err => console.log("Channel error:", err))
+  const channel = await client.channels.fetch(DASHBOARD_CHANNEL_ID)
+    .catch(err => {
+      console.log("Channel error:", err.message)
+      return null
+    })
 
-  if (!channel) return console.log("Channel tak jumpa")
+  if (!channel?.isTextBased()) {
+    return console.log("Dashboard channel tak jumpa atau bukan channel teks")
+  }
 
-  dashboardMessage = await channel.send({
-    content: "Loading dashboard...",
-    components: [getControlPanel()]
-  })
+  try {
+    if (dashboardMessage) {
+      await dashboardMessage.fetch()
+    } else {
+      dashboardMessage = await channel.send({
+        content: "Loading dashboard...",
+        components: [getControlPanel()]
+      })
+    }
 
-  updateDashboard()
-  setInterval(updateDashboard, 10000)
+    updateDashboard()
+    dashboardInterval = setInterval(updateDashboard, 10000)
+  } catch (err) {
+    dashboardMessage = null
+    console.log("Dashboard error:", err.message)
+  }
 })
 
 // =======================
@@ -199,6 +229,10 @@ client.on("messageCreate", async (message) => {
     return message.reply("Sila tulis soalan selepas `!ai`.");
   }
 
+  if (!process.env.OPENAI_KEY) {
+    return message.reply("AI belum dikonfigurasi. Sila tambah OPENAI_KEY dalam fail .env.");
+  }
+
   const thinkingMsg = await message.channel.send("🧠 Thinking...");
 
   try {
@@ -241,6 +275,22 @@ client.on("messageCreate", async (message) => {
 
 
 // =======================
+process.on('unhandledRejection', error => {
+  console.error('Unhandled promise rejection:', error)
+})
+
+process.on('uncaughtException', error => {
+  console.error('Uncaught exception:', error)
+})
+
 // LOGIN
 // =======================
-client.login(process.env.TOKEN)
+if (!TOKEN) {
+  console.error('Missing TOKEN in .env')
+  process.exitCode = 1
+} else {
+  client.login(TOKEN).catch(error => {
+    console.error('Discord login failed:', error.message)
+    process.exitCode = 1
+  })
+}
