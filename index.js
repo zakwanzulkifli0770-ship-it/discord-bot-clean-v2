@@ -37,6 +37,42 @@ function getUserRole(userId) {
   return "user"
 }
 
+async function getOpenAIReply(prompt) {
+  if (!process.env.OPENAI_KEY) {
+    const error = new Error('OPENAI_KEY is missing')
+    error.code = 'MISSING_OPENAI_KEY'
+    throw error
+  }
+
+  const response = await axios.post(
+    "https://api.openai.com/v1/chat/completions",
+    {
+      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.OPENAI_KEY}`,
+        "Content-Type": "application/json"
+      },
+      timeout: 30000
+    }
+  )
+
+  const reply = response.data.choices?.[0]?.message?.content?.trim()
+  if (!reply) throw new Error('OpenAI returned an empty response')
+  return reply
+}
+
+function splitDiscordMessage(text) {
+  const chunks = []
+  for (let index = 0; index < text.length; index += 2000) {
+    chunks.push(text.slice(index, index + 2000))
+  }
+  return chunks
+}
+
 // =======================
 // VARIABLES
 // =======================
@@ -220,58 +256,38 @@ client.on('interactionCreate', async (interaction) => {
 // AI COMMAND
 // =======================
 client.on("messageCreate", async (message) => {
-  if (message.author.bot) return;
-  if (!message.content.startsWith("!ai")) return;
+  if (message.author.bot) return
+  if (!/^!ai(?:\s|$)/i.test(message.content)) return
 
-  const prompt = message.content.slice(3).trim();
+  const prompt = message.content.slice(3).trim()
 
   if (!prompt) {
-    return message.reply("Sila tulis soalan selepas `!ai`.");
+    return message.reply("Sila tulis soalan selepas `!ai`.")
   }
 
-  if (!process.env.OPENAI_KEY) {
-    return message.reply("AI belum dikonfigurasi. Sila tambah OPENAI_KEY dalam fail .env.");
-  }
-
-  const thinkingMsg = await message.channel.send("🧠 Thinking...");
+  const thinkingMsg = await message.channel.send("🧠 Thinking...")
 
   try {
-    const res = await axios.post(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        model: "gpt-4o-mini",
-        messages: [
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.OPENAI_KEY}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const reply = await getOpenAIReply(prompt)
+    const chunks = splitDiscordMessage(reply)
 
-    const reply = res.data.choices?.[0]?.message?.content;
-
-    if (!reply) {
-      return thinkingMsg.edit("❌ AI tidak beri jawapan.");
-    }
-
-    // Discord limit: 2000 characters
-    if (reply.length > 2000) {
-      await thinkingMsg.edit(reply.slice(0, 1990) + "...");
-    } else {
-      await thinkingMsg.edit(reply);
+    await thinkingMsg.edit(chunks[0])
+    for (const chunk of chunks.slice(1)) {
+      await message.channel.send(chunk)
     }
   } catch (err) {
-    console.error(err.response?.data || err.message);
-    await thinkingMsg.edit("❌ AI error");
+    const apiError = err.response?.data?.error?.message
+    console.error('OpenAI error:', apiError || err.message)
+
+    if (err.code === 'MISSING_OPENAI_KEY') {
+      await thinkingMsg.edit("❌ AI belum dikonfigurasi. Tambah OPENAI_KEY dalam fail .env.")
+    } else if (err.response?.status === 429) {
+      await thinkingMsg.edit("❌ OpenAI sedang sibuk atau kuota API telah habis.")
+    } else {
+      await thinkingMsg.edit("❌ AI tidak dapat menjawab sekarang. Cuba lagi sebentar.")
+    }
   }
-});
+})
 
 
 // =======================
