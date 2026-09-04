@@ -73,6 +73,23 @@ function splitDiscordMessage(text) {
   return chunks
 }
 
+function getAiPrompt(message) {
+  const content = message.content.trim()
+  const commandMatch = content.match(/^!(ai|ask)(?:\s+|$)/i)
+
+  if (commandMatch) {
+    return content.slice(commandMatch[0].length).trim()
+  }
+
+  if (client.user && message.mentions.has(client.user)) {
+    return content
+      .replace(new RegExp(`<@!?${client.user.id}>`, 'g'), '')
+      .trim()
+  }
+
+  return null
+}
+
 // =======================
 // VARIABLES
 // =======================
@@ -227,7 +244,7 @@ client.on('interactionCreate', async (interaction) => {
   // =======================
   if (interaction.customId === 'ai') {
     return interaction.reply({
-      content: `🤖 AI system active (${role})`,
+      content: `🤖 AI is ready. Ask me in this server with !ai your question, !ask your question, or mention me. (${role})`,
       ephemeral: true
     })
   }
@@ -257,12 +274,12 @@ client.on('interactionCreate', async (interaction) => {
 // =======================
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return
-  if (!/^!ai(?:\s|$)/i.test(message.content)) return
 
-  const prompt = message.content.slice(3).trim()
+  const prompt = getAiPrompt(message)
+  if (prompt === null) return
 
   if (!prompt) {
-    return message.reply("Sila tulis soalan selepas `!ai`.")
+    return message.reply("Ask a question after `!ai`, `!ask`, or your mention of me.")
   }
 
   const thinkingMsg = await message.channel.send("🧠 Thinking...")
