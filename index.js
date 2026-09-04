@@ -21,6 +21,8 @@ const OWNER_ID = process.env.OWNER_ID || "857317617148231690"
 const ADMIN_IDS = parseIds(process.env.ADMIN_IDS)
 const MOD_IDS = parseIds(process.env.MOD_IDS)
 const DASHBOARD_CHANNEL_ID = process.env.DASHBOARD_CHANNEL_ID || "884579927557558303"
+const AI_COOLDOWN_MS = Number(process.env.AI_COOLDOWN_MS) || 15000
+const AI_MAX_PROMPT_LENGTH = Number(process.env.AI_MAX_PROMPT_LENGTH) || 1500
 
 const client = new Client({
   intents: [
@@ -96,6 +98,8 @@ function getAiPrompt(message) {
 let dashboardMessage
 let statusInterval
 let dashboardInterval
+const aiCooldowns = new Map()
+const activeAiRequests = new Set()
 
 // =======================
 // BUTTON PANEL
@@ -199,6 +203,22 @@ function updateDashboard() {
   }).catch(err => console.log("Dashboard edit error:", err))
 }
 
+function getHelpMessage() {
+  return `
+🤖 **ZYR BOT COMMANDS**
+
+**AI**
+• !ai <soalan> atau !ask <soalan>
+• Mention bot untuk bertanya
+• Cooldown: ${AI_COOLDOWN_MS / 1000}s setiap pengguna
+
+**UTILITY**
+• !help - Papar arahan
+• !ping - Semak latency bot
+• Tekan butang dashboard untuk kawalan staff
+`
+}
+
 // =======================
 // BUTTON INTERACTIONS (MULTI-ADMIN LOCK)
 // =======================
@@ -275,12 +295,39 @@ client.on('interactionCreate', async (interaction) => {
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return
 
+  const command = message.content.trim().match(/^!(help|commands|ping)(?:\s|$)/i)?.[1]?.toLowerCase()
+  if (command === 'help' || command === 'commands') {
+    return message.reply(getHelpMessage())
+  }
+
+  if (command === 'ping') {
+    return message.reply(`🏓 Pong! Discord latency: ${client.ws.ping}ms`)
+  }
+
   const prompt = getAiPrompt(message)
   if (prompt === null) return
 
   if (!prompt) {
     return message.reply("Ask a question after `!ai`, `!ask`, or your mention of me.")
   }
+
+  if (prompt.length > AI_MAX_PROMPT_LENGTH) {
+    return message.reply(`❌ Soalan terlalu panjang. Had maksimum ialah ${AI_MAX_PROMPT_LENGTH} aksara.`)
+  }
+
+  const requestKey = `${message.guildId || 'dm'}:${message.author.id}`
+  const cooldownUntil = aiCooldowns.get(requestKey) || 0
+  if (cooldownUntil > Date.now()) {
+    const seconds = Math.ceil((cooldownUntil - Date.now()) / 1000)
+    return message.reply(`⏳ Sila tunggu ${seconds}s sebelum bertanya lagi.`)
+  }
+
+  if (activeAiRequests.has(requestKey)) {
+    return message.reply("🧠 Soalan anda masih sedang diproses. Tunggu jawapan sebelumnya selesai.")
+  }
+
+  aiCooldowns.set(requestKey, Date.now() + AI_COOLDOWN_MS)
+  activeAiRequests.add(requestKey)
 
   const thinkingMsg = await message.channel.send("🧠 Thinking...")
 
@@ -305,6 +352,8 @@ client.on("messageCreate", async (message) => {
     } else {
       await thinkingMsg.edit("❌ AI tidak dapat menjawab sekarang. Cuba lagi sebentar.")
     }
+  } finally {
+    activeAiRequests.delete(requestKey)
   }
 })
 
