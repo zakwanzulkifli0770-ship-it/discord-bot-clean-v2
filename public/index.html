@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A focused campaign concept studio for marketing teams.">
+  <title>Signal / Campaign Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Signal campaign studio home"><span class="brand-mark">S/</span><span>Signal</span></a>
+      <div class="topbar-status"><span class="status-dot"></span><span>Private workspace</span><span class="divider"></span><span class="mono">STUDIO 01</span></div>
+    </header>
+
+    <main>
+      <section class="hero-section">
+        <div class="eyebrow"><span>Campaign concept studio</span><span class="eyebrow-line"></span><span class="mono">AI / 001</span></div>
+        <h1>Make the next<br><em>signal</em> impossible to miss.</h1>
+        <p class="hero-copy">Turn a rough brief into a campaign direction your team can actually move on. Strategy, copy, launch actions, and a visual world in one considered pass.</p>
+      </section>
+
+      <section class="workspace-grid">
+        <aside class="brief-panel">
+          <div class="panel-heading"><div><span class="section-index">01</span><h2>Shape the brief</h2></div><span class="required">Required</span></div>
+          <form id="campaign-form">
+            <label class="field field-wide"><span>Campaign brief <b>*</b></span><textarea name="brief" placeholder="What are you launching, and what should change in the world after it lands?" required maxlength="1600"></textarea></label>
+            <label class="field field-wide"><span>Target audience <b>*</b></span><input name="audience" placeholder="e.g. Independent creators, 25–40" required maxlength="260"></label>
+            <label class="field field-wide"><span>Product details <b>*</b></span><textarea name="product" placeholder="The product, its strongest proof point, and what makes it different." required maxlength="900"></textarea></label>
+            <div class="field-row">
+              <label class="field"><span>Tone <b>*</b></span><select name="tone" required><option value="">Choose a tone</option><option>Sharp and confident</option><option>Warm and optimistic</option><option>Playful and irreverent</option><option>Quietly premium</option><option>Bold and disruptive</option></select></label>
+              <label class="field"><span>Channels <b>*</b></span><input name="channels" placeholder="Social, email, OOH" required maxlength="180"></label>
+            </div>
+            <button class="primary-button" type="submit"><span>Generate campaign</span><span class="button-arrow">↗</span></button>
+            <p class="form-note"><span class="note-dot"></span>Outputs stay in this session. Your API key never reaches the browser.</p>
+          </form>
+        </aside>
+
+        <section class="output-panel" aria-live="polite">
+          <div class="panel-heading output-heading"><div><span class="section-index">02</span><h2>Build the direction</h2></div><span class="output-label" id="output-label">Awaiting brief</span></div>
+          <div id="empty-state" class="empty-state"><div class="empty-orbit"><span></span><span></span><span></span></div><h3>A clear brief makes<br>room for a clear idea.</h3><p>Fill in the essentials on the left. Your strategy and creative system will appear here.</p></div>
+          <div id="loading-state" class="loading-state hidden"><div class="loader-bars"><i></i><i></i><i></i><i></i><i></i></div><p>Finding the through-line<span class="loading-dots">...</span></p><span class="mono">Writing strategy · copy · visual direction</span></div>
+          <div id="error-state" class="error-state hidden"><span class="error-icon">!</span><h3>That pass did not land.</h3><p id="error-message">Try again with a little more detail.</p><button class="text-button" id="retry-button" type="button">Try again ↗</button></div>
+          <div id="results" class="results hidden">
+            <div class="result-hero"><div><span class="mono result-kicker">THE BIG IDEA</span><h3 id="concept-name"></h3><p id="concept-thesis"></p></div><span class="result-stamp">CAMPAIGN<br>READY</span></div>
+            <div class="result-block why-block"><span class="block-label">Why it works</span><p id="concept-why"></p><div class="visual-note"><span class="block-label">Visual world</span><p id="concept-visual"></p></div></div>
+            <div class="result-block"><div class="block-header"><span class="block-label">Copy system</span><span class="mono">03 VARIANTS</span></div><div class="variants" id="variants"></div></div>
+            <div class="result-block"><div class="block-header"><span class="block-label">Launch sequence</span><span class="mono">FIELD NOTES</span></div><div class="checklist" id="checklist"></div></div>
+            <div class="result-block image-block"><div class="block-header"><span class="block-label">Visual direction</span><span class="mono">GENERATED / 01</span></div><div id="image-wrap" class="image-wrap"><div class="image-placeholder">No visual returned for this pass.</div></div><div class="image-prompts" id="image-prompts"></div></div>
+            <div class="result-footer"><span>Built with the OpenAI Responses API</span><button class="text-button" id="new-brief-button" type="button">Start a new brief ↗</button></div>
+          </div>
+        </section>
+      </section>
+    </main>
+    <footer><span>Signal / Campaign Studio</span><span class="mono">A private creative workbench</span><span>© 2026</span></footer>
+  </div>
+  <script src="/app.js" defer></script>
+</body>
+</html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A focused campaign concept studio for marketing teams.">
+  <title>Fieldnote / Campaign Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Fieldnote campaign studio home">
+        <span class="brand-mark">F</span>
+        <span>fieldnote</span>
+      </a>
+      <div class="topbar-meta"><span class="status-dot"></span> Studio / ready</div>
+      <span class="topbar-version">v1.0 / private workspace</span>
+    </header>
+
+    <main>
+      <section class="intro">
+        <p class="eyebrow">Campaign concept studio <span>01</span></p>
+        <h1>Turn a sharp brief<br>into a <em>living direction.</em></h1>
+        <p class="intro-copy">A considered starting point for teams who need the big idea, the words, and the world around it.</p>
+      </section>
+
+      <section class="workspace" aria-label="Campaign generator workspace">
+        <aside class="brief-panel">
+          <div class="section-heading">
+            <div><span class="index">01</span><h2>The brief</h2></div>
+            <span class="required">All fields optional</span>
+          </div>
+          <form id="campaign-form">
+            <label class="field field-wide">
+              <span>Campaign brief</span>
+              <textarea name="brief" rows="4" placeholder="What are we trying to make people feel, know, or do?"></textarea>
+            </label>
+            <label class="field">
+              <span>Target audience</span>
+              <input name="audience" placeholder="Who is this for?">
+            </label>
+            <label class="field">
+              <span>Product / offer</span>
+              <textarea name="product" rows="3" placeholder="What are we putting into the world?"></textarea>
+            </label>
+            <label class="field">
+              <span>Tone of voice</span>
+              <input name="tone" placeholder="e.g. warm, precise, optimistic">
+            </label>
+            <label class="field">
+              <span>Desired channels</span>
+              <input name="channels" placeholder="e.g. social, OOH, email, landing page">
+            </label>
+            <button class="generate-button" type="submit">
+              <span class="button-label">Generate direction</span>
+              <span class="button-arrow">↗</span>
+            </button>
+            <p class="form-note">Your brief is sent to the studio server. Your API key stays private.</p>
+          </form>
+        </aside>
+
+        <section class="output-panel" aria-live="polite">
+          <div class="output-header">
+            <div><span class="index">02</span><h2>Direction board</h2></div>
+            <span id="result-meta" class="result-meta">Awaiting a brief</span>
+          </div>
+
+          <div id="empty-state" class="empty-state">
+            <div class="empty-symbol">✳</div>
+            <h3>The board is yours to shape.</h3>
+            <p>Start with the tension, the audience, or simply the feeling you want to leave behind.</p>
+          </div>
+
+          <div id="loading-state" class="loading-state" hidden>
+            <div class="loader-orbit"><span></span></div>
+            <h3>Finding the throughline<span class="loading-dots">...</span></h3>
+            <p>Mapping the idea, language, and visual world.</p>
+          </div>
+
+          <div id="error-state" class="error-state" hidden>
+            <div class="error-symbol">!</div>
+            <h3>That direction got lost.</h3>
+            <p id="error-message">Try again with a little more detail in the brief.</p>
+            <button id="retry-button" class="text-button" type="button">Try again ↗</button>
+          </div>
+
+          <div id="results" hidden>
+            <article class="concept-card">
+              <div class="card-kicker">The central thought</div>
+              <h3 id="concept-name"></h3>
+              <p id="concept-thesis" class="concept-thesis"></p>
+              <div class="concept-details">
+                <div><span>Why it works</span><p id="concept-why"></p></div>
+                <div><span>Visual world</span><p id="concept-visual"></p></div>
+              </div>
+            </article>
+
+            <section class="results-section">
+              <div class="result-section-header"><span class="card-kicker">Words to test</span><span>03 variants</span></div>
+              <div id="variants" class="variant-grid"></div>
+            </section>
+
+            <section class="results-section split-section">
+              <div>
+                <div class="result-section-header"><span class="card-kicker">Launch rhythm</span><span id="checklist-count"></span></div>
+                <div id="checklist" class="checklist"></div>
+              </div>
+              <div>
+                <div class="result-section-header"><span class="card-kicker">Image prompts</span><span>Direction</span></div>
+                <div id="prompts" class="prompt-list"></div>
+              </div>
+            </section>
+
+            <section class="image-section">
+              <div class="result-section-header"><span class="card-kicker">Generated visual</span><span>01 / hero direction</span></div>
+              <div class="image-frame" id="image-frame"><div class="image-placeholder">The visual direction will appear here.</div></div>
+            </section>
+          </div>
+        </section>
+      </section>
+    </main>
+    <footer><span>FIELDNOTE / CAMPAIGN STUDIO</span><span>Built for the first good conversation.</span></footer>
+  </div>
+  <script src="/app.js" defer></script>
+</body>
+</html>

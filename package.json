@@ -1,11 +1,12 @@
 {
   "name": "new-folder",
   "version": "1.0.0",
-  "description": "",
+  "description": "Discord bot and full-stack campaign concept studio",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "studio": "node server.js",
+    "test": "node --check index.js && node --check server.js"
   },
   "keywords": [],
   "author": "",
@@ -14,8 +15,9 @@
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
-    "axios": "^1.16.0",
     "discord.js": "^14.26.4",
-    "dotenv": "^17.4.2"
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "openai": "^7.10.0"
   }
 }

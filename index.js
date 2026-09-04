@@ -1,4 +1,6 @@
 require('dotenv').config()
+const express = require('express')
+const OpenAI = require('openai')
 const {
   Client,
   GatewayIntentBits,
@@ -6,8 +8,6 @@ const {
   ButtonBuilder,
   ButtonStyle
 } = require('discord.js')
-
-const axios = require('axios')
 
 function parseIds(value) {
   return (value || '')
@@ -23,6 +23,26 @@ const MOD_IDS = parseIds(process.env.MOD_IDS)
 const DASHBOARD_CHANNEL_ID = process.env.DASHBOARD_CHANNEL_ID || "884579927557558303"
 const AI_COOLDOWN_MS = Number(process.env.AI_COOLDOWN_MS) || 15000
 const AI_MAX_PROMPT_LENGTH = Number(process.env.AI_MAX_PROMPT_LENGTH) || 1500
+const PORT = Number(process.env.PORT) || 3000
+const TEXT_MODEL = process.env.OPENAI_TEXT_MODEL || "gpt-5.6-luna"
+const IMAGE_MODEL = process.env.OPENAI_IMAGE_MODEL || TEXT_MODEL
+
+let openaiClient
+
+function getOpenAIClient() {
+  if (!openaiClient) {
+    const apiKey = process.env.OPENAI_API_KEY || process.env.OPENAI_KEY
+    if (!apiKey) {
+      const error = new Error('OPENAI_API_KEY is missing')
+      error.code = 'MISSING_OPENAI_KEY'
+      throw error
+    }
+
+    openaiClient = new OpenAI({ apiKey })
+  }
+
+  return openaiClient
+}
 
 const client = new Client({
   intents: [
@@ -40,29 +60,13 @@ function getUserRole(userId) {
 }
 
 async function getOpenAIReply(prompt) {
-  if (!process.env.OPENAI_KEY) {
-    const error = new Error('OPENAI_KEY is missing')
-    error.code = 'MISSING_OPENAI_KEY'
-    throw error
-  }
+  const response = await getOpenAIClient().responses.create({
+    model: TEXT_MODEL,
+    instructions: 'Answer clearly and helpfully. Keep responses concise unless detail is requested.',
+    input: prompt
+  })
 
-  const response = await axios.post(
-    "https://api.openai.com/v1/chat/completions",
-    {
-      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.7
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${process.env.OPENAI_KEY}`,
-        "Content-Type": "application/json"
-      },
-      timeout: 30000
-    }
-  )
-
-  const reply = response.data.choices?.[0]?.message?.content?.trim()
+  const reply = response.output_text?.trim()
   if (!reply) throw new Error('OpenAI returned an empty response')
   return reply
 }
