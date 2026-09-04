@@ -298,8 +298,10 @@ client.on("messageCreate", async (message) => {
 
     if (err.code === 'MISSING_OPENAI_KEY') {
       await thinkingMsg.edit("❌ AI belum dikonfigurasi. Tambah OPENAI_KEY dalam fail .env.")
+    } else if (err.response?.data?.error?.code === 'insufficient_quota') {
+      await thinkingMsg.edit("❌ Kredit OpenAI telah habis. Tambah kredit di https://platform.openai.com/settings/organization/billing/")
     } else if (err.response?.status === 429) {
-      await thinkingMsg.edit("❌ OpenAI sedang sibuk atau kuota API telah habis.")
+      await thinkingMsg.edit("❌ OpenAI sedang terlalu sibuk. Cuba lagi sebentar.")
     } else {
       await thinkingMsg.edit("❌ AI tidak dapat menjawab sekarang. Cuba lagi sebentar.")
     }
